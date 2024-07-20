@@ -256,6 +256,7 @@ type DevStoreRev4 = {
   // more
   dev4_get_atom_keys_set: () => Set<string>
   dev4_get_key_atom_map: () => Map<string, AnyAtom>
+  dev4_get_dehydrated_atom_state_map: () => string
 }
 
 type PrdStore = {
@@ -752,6 +753,21 @@ export const createStore = (): Store => {
       // more
       dev4_get_atom_keys_set: () => atomKeysSet,
       dev4_get_key_atom_map: () => keyAtomMap,
+      dev4_get_dehydrated_atom_state_map: () => {
+        // key is atom unique key
+        // value is atomState @see AtomState
+        const dehydratedMap: {
+          [uniqueKey: string]: AtomState<unknown> | undefined
+        } = {}
+
+        keyAtomMap.forEach((atom, uniqueKey) => {
+          const atomState = atomStateMap.get(atom)
+
+          dehydratedMap[uniqueKey] = atomState
+        })
+
+        return JSON.stringify(dehydratedMap)
+      },
     }
     Object.assign(store, devStore)
   }
