@@ -766,19 +766,19 @@ export const createStore = (): Store => {
         // key is atom unique key
         // value is {
         //  params, // @see Atom.params
-        //  state,  // atom state value @see AnyValue
+        //  initialValue,  // atom state value @see AnyValue
         // }
         const dehydratedMap: {
           [uniqueKey: string]: {
             params: object | undefined
-            state: AnyValue
+            initialValue: AnyValue
           }
         } = {}
 
         keyAtomMap.forEach(({ atom, params }, uniqueKey) => {
           const atomState = atomStateMap.get(atom)
 
-          dehydratedMap[uniqueKey] = { params, state: atomState }
+          dehydratedMap[uniqueKey] = { params, initialValue: atomState?.v }
         })
 
         return JSON.stringify(dehydratedMap)
