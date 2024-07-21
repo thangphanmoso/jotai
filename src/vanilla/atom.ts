@@ -49,6 +49,8 @@ export interface Atom<Value> {
   debugPrivate?: boolean
   // Unique key for this atom
   uniqueKey?: string
+  // If provided, this atom is created by atom family and params is passed to atom family
+  params?: object
 }
 
 export interface WritableAtom<Value, Args extends unknown[], Result>
@@ -88,15 +90,18 @@ export function atom<Value>(
   initialValue: Value,
 ): PrimitiveAtom<Value> & WithInitialValue<Value>
 
-// 5. primitive atom with unique key
+// 5. primitive atom with unique key and params used for atomFamily to create this atom
+//    unique key will come along with params
 export function atom<Value>(
   initialValue: Value,
   uniqueKey: string,
+  params: object,
 ): PrimitiveAtom<Value> & WithInitialValue<Value>
 
 export function atom<Value, Args extends unknown[], Result>(
   read: Value | Read<Value, SetAtom<Args, Result>>,
   write?: string | Write<Args, Result>,
+  params?: object,
 ) {
   const key = `atom${++keyCount}`
   const config = {
@@ -122,7 +127,7 @@ export function atom<Value, Args extends unknown[], Result>(
     // 5
     else {
       config.uniqueKey = write
-      console.log(write)
+      if (params) config.params = params
     }
   }
 

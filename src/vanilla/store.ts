@@ -255,7 +255,10 @@ type DevStoreRev4 = {
   dev4_restore_atoms: (values: Iterable<readonly [AnyAtom, AnyValue]>) => void
   // more
   dev4_get_atom_keys_set: () => Set<string>
-  dev4_get_key_atom_map: () => Map<string, AnyAtom>
+  dev4_get_key_atom_map: () => Map<
+    string,
+    { atom: AnyAtom; params: object | undefined }
+  >
   dev4_get_dehydrated_atom_state_map: () => string
 }
 
@@ -279,8 +282,14 @@ export const createStore = (): Store => {
 
   // unique key - atom map
   // key: unique key
-  // value: any atom
-  const keyAtomMap = new Map<string, AnyAtom>()
+  // value: {
+  //    atom,    // any atom
+  //    params,  // if provided, this atom is created by atom family and params is passed to atom family
+  // }
+  const keyAtomMap = new Map<
+    string,
+    { atom: AnyAtom; params: object | undefined }
+  >()
 
   const atomStateMap = new WeakMap<AnyAtom, AtomState>()
 
@@ -308,7 +317,7 @@ export const createStore = (): Store => {
         atomKeysSet.add(atom.uniqueKey)
 
         // set unique key - atom map
-        keyAtomMap.set(atom.uniqueKey, atom)
+        keyAtomMap.set(atom.uniqueKey, { atom, params: atom.params })
       }
 
       // set atom - state map
@@ -755,15 +764,21 @@ export const createStore = (): Store => {
       dev4_get_key_atom_map: () => keyAtomMap,
       dev4_get_dehydrated_atom_state_map: () => {
         // key is atom unique key
-        // value is atomState @see AtomState
+        // value is {
+        //  params, // @see Atom.params
+        //  state,  // atom state value @see AnyValue
+        // }
         const dehydratedMap: {
-          [uniqueKey: string]: AtomState<unknown> | undefined
+          [uniqueKey: string]: {
+            params: object | undefined
+            state: AnyValue
+          }
         } = {}
 
-        keyAtomMap.forEach((atom, uniqueKey) => {
+        keyAtomMap.forEach(({ atom, params }, uniqueKey) => {
           const atomState = atomStateMap.get(atom)
 
-          dehydratedMap[uniqueKey] = atomState
+          dehydratedMap[uniqueKey] = { params, state: atomState }
         })
 
         return JSON.stringify(dehydratedMap)
